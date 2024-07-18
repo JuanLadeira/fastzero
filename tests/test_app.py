@@ -1,17 +1,17 @@
-from fastapi.testclient import TestClient
 
 from fastzero.app import app
 
-client = TestClient(app)
 
 
-def test_root_deve_retornar_200_e_ola_mundo():
+
+def test_root_deve_retornar_200_e_ola_mundo(client):
     response = client.get('/')
     assert response.status_code == 200
     assert response.json() == {'message': 'Olá Mundo!'}
 
 
-def test_create_user():
+def test_create_user(client, session):
+
     response = client.post(
         '/users/',
         json={
@@ -28,7 +28,7 @@ def test_create_user():
     }
 
 
-def test_read_users():
+def test_read_users(client, session):
     response = client.get('/users/')
     assert response.status_code == 200
     assert response.json() == {
@@ -42,7 +42,7 @@ def test_read_users():
     }
 
 
-def test_update_user():
+def test_update_user(client, session):
     response = client.put(
         '/users/1',
         json={
@@ -59,7 +59,7 @@ def test_update_user():
     }
 
 
-def test_update_user_excepetion():
+def test_update_user_excepetion(client, session):
     response = client.put(
         '/users/-1',
         json={
@@ -71,12 +71,12 @@ def test_update_user_excepetion():
     assert response.status_code == 404
 
 
-def test_delete_user():
+def test_delete_user(client, session):
     response = client.delete('/users/1')
     assert response.status_code == 200
     assert response.json() == {'detail': 'User deleted'}
 
 
-def test_delete_user_exeception():
+def test_delete_user_exeception(client, session):
     response = client.delete('/users/-1')
     assert response.status_code == 404
