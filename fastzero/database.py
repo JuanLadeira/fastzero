@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 
 from fastzero.settings import Settings
 
-
 engine = create_engine(Settings().DATABASE_URL)
 
 

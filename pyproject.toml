@@ -17,6 +17,9 @@ coverage = "^7.6.0"
 psycopg = "^3.2.1"
 psycopg2-binary = "^2.9.9"
 blue = "^0.9.1"
+pwdlib = {extras = ["argon2"], version = "^0.2.0"}
+pyjwt = "^2.8.0"
+python-multipart = "^0.0.9"
 
 [tool.ruff]
 line-length = 79
@@ -44,7 +47,7 @@ isort = "^5.12.0"
 
 [tool.taskipy.tasks]
 lint = 'docker compose -f local.yml run --rm fastzero_app ruff . '
-format = 'docker compose -f local.yml run --rm fastzero_app python -m blue . --diff '
+format = 'docker compose -f local.yml run --rm fastzero_app python -m blue . --diff && isort .'
 pre_up = 'task format && task lint && task test && task migrate'
 up = 'docker compose -f local.yml up'
 down = "docker compose -f local.yml down"

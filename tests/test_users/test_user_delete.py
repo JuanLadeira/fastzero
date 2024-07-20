@@ -1,5 +1,3 @@
-from fastzero.schemas import UserPublic
-
 def test_delete_user_without_user(client):
     response = client.delete('/users/1')
     assert response.status_code == 404

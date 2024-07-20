@@ -1,15 +1,12 @@
 import pytest
-
-from sqlalchemy.orm import Session
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
+from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
-
 from fastzero.app import app
-from fastzero.models import table_registry
 from fastzero.database import get_session
-from fastzero.models import User
+from fastzero.models import User, table_registry
 
 
 @pytest.fixture()
