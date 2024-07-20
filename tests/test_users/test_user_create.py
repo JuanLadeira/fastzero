@@ -1,4 +1,4 @@
-def test_create_user(client):
+def test_user_create(client):
 
     response = client.post(
         '/users/',
@@ -15,7 +15,7 @@ def test_create_user(client):
         'id': 1,
     }
 
-def test_create_user_com_username_ja_registrado(client, user):
+def test_user_create_com_username_ja_registrado(client, user):
     response = client.post(
         '/users/',
         json={
@@ -26,7 +26,7 @@ def test_create_user_com_username_ja_registrado(client, user):
     )
     assert response.status_code == 400
 
-def test_create_user_com_email_ja_registrado(client, user):
+def test_user_create_com_email_ja_registrado(client, user):
     response = client.post(
         '/users/',
         json={

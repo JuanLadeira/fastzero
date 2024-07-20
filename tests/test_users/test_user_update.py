@@ -1,6 +1,7 @@
-def test_update_user(client, user):
+def test_user_update(client, user, token):
     response = client.put(
         f'/users/{user.id}',
+        headers={'Authorization': f'Bearer {token}'},
         json={
             'username': 'bob',
             'email': 'bob@gmail.com',
@@ -12,13 +13,14 @@ def test_update_user(client, user):
     assert response.json()['email'] == 'bob@gmail.com'
     
 
-def test_update_user_excepetion(client):
+def test_user_update_exception(client, token):
     response = client.put(
-        '/users/-1',
+        '/users/3',
+        headers={'Authorization': f'Bearer {token}'},
         json={
             'username': 'bob',
             'email': 'bob@example.com',
             'password': 'mynewpassword',
         },
     )
-    assert response.status_code == 404
+    assert response.status_code == 403
