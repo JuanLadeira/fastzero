@@ -7,8 +7,13 @@ from sqlalchemy.orm import Session
 
 from fastzero.database import get_session
 from fastzero.models import User
-from fastzero.schemas import Message, UserList, UserPublic, UserSchema
-from fastzero.security import get_password_hash, verify_password, create_access_token
+from fastzero.schemas import Message, Token, UserList, UserPublic, UserSchema
+from fastzero.security import (
+    create_access_token,
+    get_current_user,
+    get_password_hash,
+    verify_password,
+)
 
 app = FastAPI()
 
@@ -55,7 +60,7 @@ def create_user(user: UserSchema, session: Session = Depends(get_session)):
 def read_users(
     limit: int = 5,
     offset:int = 0,
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
     ):
     db_users = session.scalars(
         select(User).offset(offset).limit(limit)
@@ -78,21 +83,24 @@ def read_user(
 @app.put('/users/{user_id}', response_model=UserPublic)
 def update_user(
     user_id: int, user: UserSchema, 
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    current_user = Depends(get_current_user)
     ):
-    db_user = session.scalar(select(User).where(User.id == user_id))
-    if not db_user:
-        raise HTTPException(status_code=404, detail='User not found')
+    if current_user.id != user_id:
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN,
+            detail='You can only update your own user'
+        )
     
-    db_user.username = user.username
-    db_user.email = user.email
-    db_user.password = get_password_hash(user.password)
+    current_user.username = user.username
+    current_user.email = user.email
+    current_user.password = get_password_hash(user.password)
 
-    session.add(db_user)
+    session.add(current_user)
     session.commit()
-    session.refresh(db_user)
+    session.refresh(current_user)
 
-    return db_user
+    return current_user
 
 @app.delete(
     '/users/{user_id}',
@@ -100,29 +108,38 @@ def update_user(
 )
 def delete_user(
     user_id: int, 
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    current_user = Depends(get_current_user)
     ):
-    db_user = session.scalar(select(User).where(User.id == user_id))
-    if not db_user:
-        raise HTTPException(status_code=404, detail='User not found')
+    if current_user.id != user_id:
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN,
+            detail='You can only update your own user'
+        )
 
-    session.delete(db_user)
+    session.delete(current_user)
     session.commit()
 
     return {'detail': 'User deleted'}
 
 
-@app.post('/token')
+@app.post('/token', response_model=Token)
 def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     session: Session = Depends(get_session)
     ):
-    user = session.scalar(select(User).where(User.username == form_data.username))
+    user = session.scalar(
+        select(User).where(User.username == form_data.username)
+        )
     if not user or not verify_password(form_data.password, user.password):
         raise HTTPException(
             status_code=HTTPStatus.UNAUTHORIZED,
             detail='Incorrect username or password',
             headers={'WWW-Authenticate': 'Bearer'},
         )
+    access_token = create_access_token({'sub': user.username})
     
-    return {'access_token': create_access_token(form_data.username), 'token_type': 'bearer'}
+    return {
+        'access_token': access_token,
+        'token_type': 'bearer'
+        }
