@@ -21,6 +21,32 @@ def test_read_users_with_users(client, user):
         ]
     }  
 
+def test_read_users_limit_1(client, user):
+    response = client.post(
+        '/users/',
+        json={
+            'username': 'Dante', 
+            'email': 'dante@gmail.com',
+            'password': '12352524$%!45',
+        }
+    )
+    assert response.status_code == 201
+    
+    response = client.get(
+        '/users/',
+        params={'limit': 1}
+    )
+    assert response.status_code == 200
+    assert len(response.json()["users"]) == 1 
+
+    response = client.get(
+        '/users/',
+        params={'limit': 2}
+    )
+    assert response.status_code == 200
+    assert len(response.json()["users"]) == 2
+
+
 
 def test_read_user_not_found(client):
     response = client.get(
