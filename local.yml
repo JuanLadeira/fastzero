@@ -30,8 +30,7 @@ services:
 
     volumes:
       - .:/app
+    
 volumes:
 
-
   pgdata:
-  

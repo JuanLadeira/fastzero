@@ -14,8 +14,9 @@ sqlalchemy = "^2.0.19"
 pydantic-settings = "^2.0.2"
 alembic = "^1.13.1"
 coverage = "^7.6.0"
-psycopg2-binary = "^2.9.9"
 psycopg = "^3.2.1"
+psycopg2-binary = "^2.9.9"
+blue = "^0.9.1"
 
 [tool.ruff]
 line-length = 79
@@ -41,19 +42,20 @@ httpx = "^0.24.1"
 isort = "^5.12.0"
 
 [tool.taskipy.tasks]
-lint = 'ruff . && blue --check . --diff'
-format = 'blue .  && isort .'
-up = 'docker compose -f local.yaml up'
-down = "docker compose -f local.yaml down"
-build = "docker compose -f local.yaml build"
-show = "docker compose -f local.yaml run --rm fastzero_app python -m poetry show"
-add = 'docker compose -f local.yaml run --rm fastzero_app python -m poetry add ${1}'
-#pre_test = 'task lint'
-test = 'docker compose -f local.yaml run --rm fastzero_app pytest -s -x --cov=fastzero -vv'
-post_test = 'coverage html'
-make_migrations = 'docker compose -f local.yaml run --rm fastzero_app alembic revision --autogenerate -m ${1}'
-migrate = 'docker compose -f local.yaml run --rm fastzero_app alembic upgrade head'
-
+lint = 'docker compose -f local.yml run --rm fastzero_app ruff . '
+format = 'docker compose -f local.yml run --rm fastzero_app python -m blue . --diff '
+pre_up = 'task format && task lint && task test && task migrate'
+up = 'docker compose -f local.yml up'
+down = "docker compose -f local.yml down"
+build = "docker compose -f local.yml build"
+show = "docker compose -f local.yml run --rm fastzero_app python -m poetry show"
+add = 'docker compose -f local.yml run --rm fastzero_app python -m poetry add ${1}'
+pre_test = 'task lint'
+test = 'docker compose -f local.yml run --rm fastzero_app pytest -s -x --cov=fastzero -vv'
+make_migrations = 'docker compose -f local.yml run --rm fastzero_app alembic revision --autogenerate -m ${1}'
+migrate = 'docker compose -f local.yml run --rm fastzero_app alembic upgrade head'
+update = 'docker compose -f local.yml run --rm fastzero_app python -m poetry update'
+install = 'docker compose -f local.yml run --rm fastzero_app python -m poetry add psycopg2-binary'
 
 
 [build-system]
