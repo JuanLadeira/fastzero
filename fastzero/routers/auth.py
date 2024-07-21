@@ -52,7 +52,7 @@ def login(
         }
 
 
-@router.post('/token', response_model=Token)
+@router.post('/refresh_token', response_model=Token)
 def refresh_token(
     user: User = Depends(get_current_user),
 ):

@@ -56,3 +56,34 @@ def test_token_expired(client, user):
         assert response.status_code == HTTPStatus.UNAUTHORIZED
         assert response.json() == {'detail': 'Token has expired'}
 
+
+def test_refresh_token(client, token):
+    response = client.post(
+        '/auth/refresh_token',
+        headers={
+            'Authorization': f'Bearer {token}'
+        },
+    )
+    
+    data = response.json()
+    assert response.status_code == HTTPStatus.OK
+    assert 'access_token' in data
+    assert 'token_type' in data
+    assert data['token_type'] == 'bearer'
+
+def test_refresh_token_expired(client, user):
+    with freeze_time('2021-01-01 00:00:00'):
+        response = client.post(
+            'auth/token',
+            data={'username': user.username, 'password': user.clean_password}
+        )
+        assert response.status_code == HTTPStatus.OK
+        token = response.json()["access_token"]
+
+    with freeze_time('2021-01-01 00:32:00'):
+        response = client.put(
+            f'auth/refresh_token',
+            headers={'Authorization': f'Bearer {token}'},
+        )
+        assert response.status_code == HTTPStatus.METHOD_NOT_ALLOWED
+        assert response.json() == {'detail': 'Method Not Allowed'}
