@@ -1,5 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
+from pytest_factoryboy import register
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
@@ -8,7 +9,9 @@ from fastzero.app import app
 from fastzero.database import get_session
 from fastzero.models import User, table_registry
 from fastzero.security import get_password_hash
+from tests.factories.user_factory import UserFactory
 
+register(UserFactory)
 
 @pytest.fixture()
 def client(session):
@@ -22,6 +25,16 @@ def client(session):
 
     app.dependency_overrides.clear()
 
+
+@pytest.fixture()
+def other_user(session, user_factory):
+    user = user_factory.create()
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+
+    yield user
+    
 
 @pytest.fixture()
 def session():

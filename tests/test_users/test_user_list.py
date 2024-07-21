@@ -1,3 +1,6 @@
+from fastzero.schemas import UserPublic
+
+
 def test_users_list_whitout_users(client):
     response = client.get(
         '/users/',
@@ -6,32 +9,20 @@ def test_users_list_whitout_users(client):
     assert response.json() == {'users': []}
 
 
-def test_users_list_with_users(client, user):
+def test_users_list_with_users(client, user, other_user):
+    
+    user_schema = UserPublic.model_validate(user).model_dump()
+    other_user_schema = UserPublic.model_validate(other_user).model_dump()
+
     response = client.get(
         '/users/',
     )
     assert response.status_code == 200
     assert response.json() == {
-        'users': [
-            {
-                'id': 1,
-                'username': 'juan', 
-                'email': 'juan@gmail.com'
-            }
-        ]
+        'users': [user_schema, other_user_schema]
     }  
 
-def test_users_list_limit_1(client, user):
-    response = client.post(
-        '/users/',
-        json={
-            'username': 'Dante', 
-            'email': 'dante@gmail.com',
-            'password': '12352524$%!45',
-        }
-    )
-    assert response.status_code == 201
-    
+def test_users_list_limit_1(client, user, other_user):
     response = client.get(
         '/users/',
         params={'limit': 1}

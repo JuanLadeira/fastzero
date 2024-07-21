@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from fastzero.database import get_session
 from fastzero.models import User
 from fastzero.schemas import Token
-from fastzero.security import create_access_token, verify_password
+from fastzero.security import create_access_token, verify_password, get_current_user
 
 router = APIRouter(
     prefix="/auth",
@@ -27,7 +27,14 @@ def login(
     user = session.scalar(
         select(User).where(User.username == form_data.username)
         )
-    if not user or not verify_password(form_data.password, user.password):
+    if not user: 
+        raise HTTPException(
+            status_code=HTTPStatus.UNAUTHORIZED,
+            detail='Incorrect username or password',
+            headers={'WWW-Authenticate': 'Bearer'},   
+        )
+    
+    if not verify_password(form_data.password, user.password):
         raise HTTPException(
             status_code=HTTPStatus.UNAUTHORIZED,
             detail='Incorrect username or password',
@@ -39,3 +46,11 @@ def login(
         'access_token': access_token,
         'token_type': 'bearer'
         }
+
+
+@router.post('/token', response_model=Token)
+def refresh_token(
+    user: User = Depends(get_current_user),
+):
+    new_access_token = create_access_token(data={'sub': user.username})
+    return {'access_token': new_access_token, 'token_type': 'bearer'}
