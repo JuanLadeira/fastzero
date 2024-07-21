@@ -10,7 +10,6 @@ WORKDIR app/
 COPY . .
 
 
-
 RUN pip install poetry
 
 
