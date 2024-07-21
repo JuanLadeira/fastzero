@@ -2,12 +2,13 @@
 # from http import HTTPStatus
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends , Query
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 
 from fastzero.database import get_session
 from fastzero.models import Todo, User
-from fastzero.schemas import TodoPublic, TodoSchema
+from fastzero.schemas import TodoPublic, TodoSchema, TodoList
 from fastzero.security import get_current_user
 
 router = APIRouter(
@@ -38,9 +39,31 @@ def create_todos(
 
  
 
-# @router.get("/",response_model=TodosList)
-# def read_todos():
-#     ...
+@router.get("/",response_model=TodoList)
+def read_todos(
+    session: T_Session,
+    user: T_CurrentUser,
+    title: str = Query(None),
+    description: str = Query(None),
+    state: str = Query(None),
+    offset: int = Query(None),
+    limit: int = Query(None),
+):
+    query = select(Todo).where(Todo.user_id == user.id)
+
+    if title:
+        query = query.filter(Todo.title.contains(title))
+
+    if description:
+        query = query.filter(Todo.description.contains(description))
+
+    if state:
+        query = query.filter(Todo.state == state)
+
+    todos = session.scalars(query.offset(offset).limit(limit)).all()
+
+    return {'todos': todos}
+...
 
 
 # @router.put('/{todo_id}', response_model=Todosublic)
