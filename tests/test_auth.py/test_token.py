@@ -25,7 +25,10 @@ def test_get_token_wrong_password(client, user):
 def test_get_token_wrong_email(client, user):
     response = client.post(
         'auth/token',
-        data={'username': "emailerrado@gmail.com", 'password': user.clean_password}
+        data={
+            'username': "emailerrado@gmail.com",
+              'password': user.clean_password
+        }
     )
     assert response.status_code == HTTPStatus.UNAUTHORIZED
 
