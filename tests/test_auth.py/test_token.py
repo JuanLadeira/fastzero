@@ -82,7 +82,7 @@ def test_refresh_token_expired(client, user):
 
     with freeze_time('2021-01-01 00:32:00'):
         response = client.put(
-            f'auth/refresh_token',
+            'auth/refresh_token',
             headers={'Authorization': f'Bearer {token}'},
         )
         assert response.status_code == HTTPStatus.METHOD_NOT_ALLOWED
