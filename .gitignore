@@ -1,4 +1,7 @@
-database.db
 .env
 .pytest_cache
-__pycache__
+
+__pycache__/
+
+.pyc
+database.db
