@@ -1,14 +1,19 @@
-
-# from http import HTTPStatus
+from http import HTTPStatus
 from typing import Annotated
 
-from fastapi import APIRouter, Depends , Query
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from fastzero.database import get_session
 from fastzero.models import Todo, User
-from fastzero.schemas import TodoPublic, TodoSchema, TodoList
+from fastzero.schemas import (
+    Message,
+    TodoList,
+    TodoPublic,
+    TodoSchema,
+    TodoUpdate,
+)
 from fastzero.security import get_current_user
 
 router = APIRouter(
@@ -38,7 +43,6 @@ def create_todos(
     return db_todo
 
  
-
 @router.get("/",response_model=TodoList)
 def read_todos(
     session: T_Session,
@@ -63,16 +67,43 @@ def read_todos(
     todos = session.scalars(query.offset(offset).limit(limit)).all()
 
     return {'todos': todos}
-...
 
 
-# @router.put('/{todo_id}', response_model=Todosublic)
-# def update_todos(
-#     ):
-#    ...
-# @router.delete(
-#     '/{todo_id}',
-#     response_model=Todo,
-# )
-# def delete_Todos():
-#     ... 
+@router.patch('/{todo_id}', response_model=TodoPublic)
+def patch_todo(
+    todo_id: int, session: T_Session, user: T_CurrentUser, todo: TodoUpdate
+):
+    db_todo = session.scalar(
+        select(Todo).where(Todo.user_id == user.id, Todo.id == todo_id)
+    )
+
+    if not db_todo:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail='Task not found.'
+        )
+
+    for key, value in todo.model_dump(exclude_unset=True).items():
+        setattr(db_todo, key, value)
+
+    session.add(db_todo)
+    session.commit()
+    session.refresh(db_todo)
+
+    return db_todo
+
+
+@router.delete('/{todo_id}', response_model=Message)
+def delete_todo(todo_id: int, session: T_Session, user: T_CurrentUser):
+    todo = session.scalar(
+        select(Todo).where(Todo.user_id == user.id, Todo.id == todo_id)
+    )
+
+    if not todo:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail='Task not found.'
+        )
+
+    session.delete(todo)
+    session.commit()
+
+    return {'detail': 'Task has been deleted successfully.'}

@@ -9,9 +9,11 @@ from fastzero.app import app
 from fastzero.database import get_session
 from fastzero.models import User, table_registry
 from fastzero.security import get_password_hash
+from tests.factories.todo_factory import TodoFactory
 from tests.factories.user_factory import UserFactory
 
 register(UserFactory)
+register(TodoFactory)
 
 @pytest.fixture()
 def client(session):
